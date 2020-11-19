@@ -4,47 +4,143 @@ using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
 {
-    [SerializeField] float speed, jumpHeight, fallMultiplier, lowJumpMultiplier;
+    [SerializeField] float speed, jumpHeight, fallMultiplier, lowJumpMultiplier, hangTime;
+    [SerializeField] Vector2 groundCheckSize;
+    [SerializeField] Transform groundCheck;
     [SerializeField] LayerMask groundLayer, enemyLayer;
-    [SerializeField] bool grounded;
 
+    [SerializeField] ParticleSystem footsteps, impact;
+    ParticleSystem.EmissionModule footEmission;
+
+    float hangCounter = 0;
+    bool grounded;
+    bool doubleJump;
+    bool wasOnGround;
+    bool inAir;
+    bool jumpCD;
     Rigidbody2D rb;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        footEmission = footsteps.emission;
+    }
+
+    private void FixedUpdate()
+    {       
+        Movement();
     }
 
     void Update()
     {
-        Movement();
         Jump();
         Shoot();
     }
 
     void Movement()
     {
-        rb.velocity = new Vector2(Input.GetAxisRaw("Horizontal") * speed * Time.deltaTime * 100, rb.velocity.y);
+        //check ground colliders
+        grounded = Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0, groundLayer);
+
+        //move horizontal
+        rb.velocity = new Vector2(Input.GetAxisRaw("Horizontal") * speed * Time.deltaTime * 10, rb.velocity.y);
+
+        //show footstep effect
+        if(Input.GetAxisRaw("Horizontal") != 0)
+        {
+            footEmission.rateOverTime = 200f;
+        }
+        else
+        {
+            footEmission.rateOverTime = 0f;
+        }      
     }
 
     void Jump()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && grounded)
+        // reset double jump
+        if (grounded)
         {
-            rb.velocity = Vector2.up * jumpHeight;
+            doubleJump = false;
+        }
+        
+        // show impact effect
+        if(!wasOnGround && grounded)
+        {
+            impact.gameObject.SetActive(true);
+            impact.Stop();
+            impact.Play();
+        }
+    
+        // set possibillty for hanging
+        if (grounded)
+        {
+            hangCounter = hangTime;
+        }
+        else
+        {
+            hangCounter -= Time.deltaTime;
         }
 
-        // elevate gravity when get to highest pooint of jumping
+        // first jump
+        if (Input.GetKeyDown(KeyCode.Space) && hangCounter > 0f)
+        {
+
+            if (jumpCD)  
+                return;
+      
+            StartCoroutine(JumpCooldown());
+
+            rb.velocity = Vector2.up * jumpHeight;
+
+            jumpCD = true; 
+        }
+
+       // double jump
+       if (Input.GetKeyDown(KeyCode.Space) && !grounded  && !doubleJump)
+       {
+           rb.velocity = Vector2.up * jumpHeight;
+           doubleJump = true;
+       }
+
+        // elevate gravity when get to highest point of jumping
         if (rb.velocity.y < 0)
         {
             rb.velocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
         }
-
         // stop jumping higher when release jump button 
         else if (rb.velocity.y > 0 && !Input.GetKey(KeyCode.Space))
         {
             rb.velocity += Vector2.up * Physics2D.gravity.y * (lowJumpMultiplier - 1) * Time.deltaTime;
         }
+
+        // avoid second jump while hanging
+        inAir = !grounded;
+
+        // set/reset impact effect for next ground collision
+        wasOnGround = grounded;
+    }
+
+    IEnumerator JumpCooldown()
+    {
+        yield return new WaitForSeconds(0.1f);
+        jumpCD = false;
+    }
+
+    void HangingJump()
+    {
+
+    }
+
+    void FirstJump()
+    {
+       
+    }
+
+    void DoubleJump()
+    {
+
+      
     }
 
     void Shoot()
@@ -65,15 +161,10 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnDrawGizmos()
     {
-        if(collision.gameObject.tag == "Ground")
-            grounded = true;
-    }
-
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        if (collision.gameObject.tag == "Ground")
-            grounded = false;
+        Gizmos.DrawCube(groundCheck.position, groundCheckSize);
     }
 }
+    
+
