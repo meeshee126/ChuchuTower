@@ -21,7 +21,7 @@ public class EnemyManager : MonoBehaviour
     {
         if(collision.gameObject.name == "Player")
         {
-            Destroy(collision.gameObject);
+          //  Destroy(collision.gameObject);
         }
     }
 }

@@ -2,17 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class StraightEnemySpawner : MonoBehaviour
+public class RadiusEnemySpawner : MonoBehaviour
 {
     [SerializeField] GameObject  player , entity;
     [SerializeField] int numberOfEntitys;
     [SerializeField] float spawnInterval, spaceInRotation;
 
+    Transform enemyStack;
     float rotationZ, increase;
     
     private void Awake()
     {
         player = GameObject.Find("Player");
+        enemyStack = GameObject.Find("EnemyStack").transform;
     }
 
     void Start()
@@ -24,6 +26,7 @@ public class StraightEnemySpawner : MonoBehaviour
         StartCoroutine(spawnEntity(spawnInterval, numberOfEntitys));
     }
 
+    // look at player position
     void RotateToPlayer()
     {
         Vector3 difference = player.transform.position - this.transform.position;
@@ -31,6 +34,7 @@ public class StraightEnemySpawner : MonoBehaviour
         this.transform.rotation = Quaternion.Euler(0, 0, rotationZ);
     }
 
+    // set spacing between spawning entitys
     void SetRadius()
     {
         float average = numberOfEntitys / 2;
@@ -41,11 +45,13 @@ public class StraightEnemySpawner : MonoBehaviour
     {
         for (int i = 0; i < invokeCount; i++)
         {
-            GameObject ob = Instantiate(entity, this.transform.position, Quaternion.Euler(0, 0, rotationZ + spaceInRotation), this.transform);
+            GameObject ob = Instantiate(entity, this.transform.position, Quaternion.Euler(0, 0, rotationZ + spaceInRotation), enemyStack);
 
             spaceInRotation += increase;
 
             yield return new WaitForSeconds(interval);
         }
+
+        Destroy(this.gameObject);
     }
 }

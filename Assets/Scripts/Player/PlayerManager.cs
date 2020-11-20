@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
 {
-    [SerializeField] float speed, jumpHeight, fallMultiplier, lowJumpMultiplier, hangTime;
+    [SerializeField] float speed, jumpHeight, fallMultiplier, lowJumpMultiplier, hangTime, jumpBufferLength;
     [SerializeField] Vector2 groundCheckSize;
     [SerializeField] Transform groundCheck;
     [SerializeField] LayerMask groundLayer, enemyLayer;
@@ -13,10 +13,10 @@ public class PlayerManager : MonoBehaviour
     ParticleSystem.EmissionModule footEmission;
 
     float hangCounter = 0;
+    float jumpBufferCount;
     bool grounded;
     bool doubleJump;
     bool wasOnGround;
-    bool inAir;
     bool jumpCD;
     Rigidbody2D rb;
 
@@ -72,7 +72,7 @@ public class PlayerManager : MonoBehaviour
             impact.Play();
         }
     
-        // set possibillty for hanging
+        // manage hangtime
         if (grounded)
         {
             hangCounter = hangTime;
@@ -82,8 +82,18 @@ public class PlayerManager : MonoBehaviour
             hangCounter -= Time.deltaTime;
         }
 
+        // manage jumpBuffer
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            jumpBufferCount = jumpBufferLength;
+        }
+        else
+        {
+            jumpBufferCount -= Time.deltaTime;
+        }
+
         // first jump
-        if (Input.GetKeyDown(KeyCode.Space) && hangCounter > 0f)
+        if (jumpBufferCount >= 0 && hangCounter > 0f)
         {
 
             if (jumpCD)  
@@ -92,8 +102,10 @@ public class PlayerManager : MonoBehaviour
             StartCoroutine(JumpCooldown());
 
             rb.velocity = Vector2.up * jumpHeight;
+           
+            jumpCD = true;
 
-            jumpCD = true; 
+            jumpBufferCount = 0;
         }
 
        // double jump
@@ -114,9 +126,6 @@ public class PlayerManager : MonoBehaviour
             rb.velocity += Vector2.up * Physics2D.gravity.y * (lowJumpMultiplier - 1) * Time.deltaTime;
         }
 
-        // avoid second jump while hanging
-        inAir = !grounded;
-
         // set/reset impact effect for next ground collision
         wasOnGround = grounded;
     }
@@ -125,22 +134,6 @@ public class PlayerManager : MonoBehaviour
     {
         yield return new WaitForSeconds(0.1f);
         jumpCD = false;
-    }
-
-    void HangingJump()
-    {
-
-    }
-
-    void FirstJump()
-    {
-       
-    }
-
-    void DoubleJump()
-    {
-
-      
     }
 
     void Shoot()
