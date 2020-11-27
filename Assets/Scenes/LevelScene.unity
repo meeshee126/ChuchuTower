@@ -185,7 +185,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &187228250
 GameObject:
@@ -377,7 +377,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &305747542
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1698,6 +1698,16 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2105855561382145672, guid: 2feb6357765dc4048b16a4460925b0e1,
+        type: 3}
+      propertyPath: dashTime
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2105855561382145672, guid: 2feb6357765dc4048b16a4460925b0e1,
+        type: 3}
+      propertyPath: dashSpeed
+      value: 200
+      objectReference: {fileID: 0}
     - target: {fileID: 8727623031064943144, guid: 2feb6357765dc4048b16a4460925b0e1,
         type: 3}
       propertyPath: m_LocalPosition.x

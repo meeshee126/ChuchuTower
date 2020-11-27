@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
 {
-    [SerializeField] float speed, jumpHeight, fallMultiplier, lowJumpMultiplier, hangTime, jumpBufferLength;
+    [SerializeField] float speed, jumpHeight, fallMultiplier, lowJumpMultiplier, hangTime, jumpBufferLength, dashTime, dashSpeed;
     [SerializeField] Vector2 groundCheckSize;
     [SerializeField] Transform groundCheck;
     [SerializeField] LayerMask groundLayer, enemyLayer;
@@ -12,17 +12,19 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] ParticleSystem footsteps, impact;
     ParticleSystem.EmissionModule footEmission;
 
-    float hangCounter = 0;
+    float hangCounter = 0, dashCounter = 0;
     float jumpBufferCount;
-    bool grounded;
-    bool doubleJump;
-    bool wasOnGround;
-    bool jumpCD;
+    bool grounded, doubleJump, wasOnGround, jumpCD, dashing;
     Rigidbody2D rb;
+    BoxCollider2D boxCollider;
+
+    public Direction facing;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        boxCollider = GetComponent<BoxCollider2D>();
+
         footEmission = footsteps.emission;
     }
 
@@ -34,6 +36,8 @@ public class PlayerManager : MonoBehaviour
     void Update()
     {
         Jump();
+        JumpDown();
+        Dash();
         Shoot();
     }
 
@@ -43,10 +47,11 @@ public class PlayerManager : MonoBehaviour
         grounded = Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0, groundLayer);
 
         //move horizontal
+        if(!dashing)
         rb.velocity = new Vector2(Input.GetAxisRaw("Horizontal") * speed * Time.deltaTime * 10, rb.velocity.y);
 
         //show footstep effect
-        if(Input.GetAxisRaw("Horizontal") != 0)
+        if(Input.GetAxisRaw("Horizontal") != 0 && Input.GetAxisRaw("Vertical") != 0)
         {
             footEmission.rateOverTime = 200f;
         }
@@ -71,7 +76,7 @@ public class PlayerManager : MonoBehaviour
             impact.Stop();
             impact.Play();
         }
-    
+
         // manage hangtime
         if (grounded)
         {
@@ -81,9 +86,9 @@ public class PlayerManager : MonoBehaviour
         {
             hangCounter -= Time.deltaTime;
         }
-
+        
         // manage jumpBuffer
-        if(Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space))
         {
             jumpBufferCount = jumpBufferLength;
         }
@@ -93,13 +98,13 @@ public class PlayerManager : MonoBehaviour
         }
 
         // first jump
-        if (jumpBufferCount >= 0 && hangCounter > 0f)
+        if (jumpBufferCount >= 0 && hangCounter > 0f && !Input.GetKey(KeyCode.S))
         {
 
             if (jumpCD)  
                 return;
       
-            StartCoroutine(JumpCooldown());
+            Invoke("JumpCooldown", 0.1f);
 
             rb.velocity = Vector2.up * jumpHeight;
            
@@ -130,23 +135,37 @@ public class PlayerManager : MonoBehaviour
         wasOnGround = grounded;
     }
 
-    IEnumerator JumpCooldown()
-    {
-        yield return new WaitForSeconds(0.1f);
+    void JumpCooldown()
+    {    
         jumpCD = false;
+    }
+
+    void JumpDown()
+    {
+        // jump down through platform
+        if (Input.GetKey(KeyCode.S) && Input.GetKeyDown(KeyCode.Space))
+        {
+            ManageBoxCollider();
+            Invoke("ManageBoxCollider", 0.2f);
+        }
+    }
+
+    void ManageBoxCollider()
+    {
+        boxCollider.enabled = !boxCollider.enabled;
     }
 
     void Shoot()
     {
-        if(Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0))
         {
             Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
             mousePos.Set(mousePos.x, mousePos.y, 0);
 
             RaycastHit2D hit = Physics2D.Raycast(mousePos, Vector2.zero, 0, enemyLayer);
-                
-            if(hit)
+
+            if (hit)
             {
                 Debug.Log("hit");
                 Destroy(hit.transform.gameObject);
@@ -154,10 +173,54 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    private void OnDrawGizmos()
+    void Dash()
+    {
+        //check direction
+        if(rb.velocity.x < 0)
+        {
+            facing = Direction.left;
+        }
+        else if(rb.velocity.x > 0)
+        {
+            facing = Direction.right;
+        }
+
+        //execute dashing
+        if(facing == Direction.right && Input.GetKeyDown(KeyCode.LeftShift) && !dashing)
+        {
+
+            SetGravity();
+
+            rb.gravityScale = 0;
+            rb.velocity = new Vector2(dashSpeed * Time.deltaTime * 10, 0);
+
+            Invoke("SetDash", dashTime);
+
+            
+        }
+        else if (facing == Direction.left && Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            Debug.Log("left");
+        }
+    }
+
+    void SetGravity()
+    {
+        dashing = !dashing;
+        rb.gravityScale = 5;
+    }
+
+    public enum Direction
+    {
+        none,
+        right,
+        left
+    }
+
+    private void OnDrawGizmosSelected()
     {
         Gizmos.DrawCube(groundCheck.position, groundCheckSize);
-    }
+    }     
 }
     
 
