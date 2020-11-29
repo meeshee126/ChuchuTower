@@ -14,9 +14,10 @@ public class PlayerManager : MonoBehaviour
 
     float hangCounter = 0, dashCounter = 0;
     float jumpBufferCount;
-    bool grounded, doubleJump, wasOnGround, jumpCD, dashing;
+    bool grounded, doubleJump, wasOnGround, jumpCD, dashing, dashCD;
     Rigidbody2D rb;
     BoxCollider2D boxCollider;
+    Collider2D groundCollider;
 
     public Direction facing;
 
@@ -25,40 +26,47 @@ public class PlayerManager : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         boxCollider = GetComponent<BoxCollider2D>();
 
-        footEmission = footsteps.emission;
+        footEmission = footsteps.emission;     
     }
 
-    private void FixedUpdate()
+    void FixedUpdate()
     {       
-        Movement();
+        Movement();   
     }
 
     void Update()
     {
         Jump();
         JumpDown();
-        Dash();
-        Shoot();
+        PrepareDash();
+        Shoot();   
     }
 
     void Movement()
     {
-        //check ground colliders
-        grounded = Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0, groundLayer);
-
-        //move horizontal
         if(!dashing)
-        rb.velocity = new Vector2(Input.GetAxisRaw("Horizontal") * speed * Time.deltaTime * 10, rb.velocity.y);
+        {
+            //check ground colliders and set bool to true
+            groundCollider = Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0, groundLayer);
+            grounded = groundCollider;
+     
+            //move horizontal
+            rb.velocity = new Vector2(Input.GetAxisRaw("Horizontal") * speed * Time.deltaTime * 10, rb.velocity.y);
+
+            //reset dash when hit the ground
+            if (grounded)
+                dashCD = false;
+        }
 
         //show footstep effect
-        if(Input.GetAxisRaw("Horizontal") != 0 && Input.GetAxisRaw("Vertical") != 0)
+        if (rb.velocity.x != 0 || rb.velocity.y != 0)
         {
-            footEmission.rateOverTime = 200f;
+            footEmission.rateOverTime = 200f;                          
         }
         else
         {
             footEmission.rateOverTime = 0f;
-        }      
+        }
     }
 
     void Jump()
@@ -68,13 +76,11 @@ public class PlayerManager : MonoBehaviour
         {
             doubleJump = false;
         }
-        
-        // show impact effect
-        if(!wasOnGround && grounded)
+
+        // show impact when hit the ground
+        if (!wasOnGround && grounded)
         {
-            impact.gameObject.SetActive(true);
-            impact.Stop();
-            impact.Play();
+            ImpactEffect();
         }
 
         // manage hangtime
@@ -97,13 +103,13 @@ public class PlayerManager : MonoBehaviour
             jumpBufferCount -= Time.deltaTime;
         }
 
-        // first jump
+        // jump
         if (jumpBufferCount >= 0 && hangCounter > 0f && !Input.GetKey(KeyCode.S))
         {
 
             if (jumpCD)  
                 return;
-      
+            
             Invoke("JumpCooldown", 0.1f);
 
             rb.velocity = Vector2.up * jumpHeight;
@@ -117,6 +123,7 @@ public class PlayerManager : MonoBehaviour
        if (Input.GetKeyDown(KeyCode.Space) && !grounded  && !doubleJump)
        {
            rb.velocity = Vector2.up * jumpHeight;
+           ImpactEffect();
            doubleJump = true;
        }
 
@@ -135,6 +142,7 @@ public class PlayerManager : MonoBehaviour
         wasOnGround = grounded;
     }
 
+    // avoid trtiple jump
     void JumpCooldown()
     {    
         jumpCD = false;
@@ -143,13 +151,14 @@ public class PlayerManager : MonoBehaviour
     void JumpDown()
     {
         // jump down through platform
-        if (Input.GetKey(KeyCode.S) && Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKey(KeyCode.S) && Input.GetKeyDown(KeyCode.Space) && grounded && groundCollider.gameObject.name != "BaseGround" )
         {
             ManageBoxCollider();
-            Invoke("ManageBoxCollider", 0.2f);
+            Invoke("ManageBoxCollider", 0.15f);
         }
     }
 
+    //disable box collider for jumping down trough platform
     void ManageBoxCollider()
     {
         boxCollider.enabled = !boxCollider.enabled;
@@ -173,9 +182,9 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    void Dash()
+    void PrepareDash()
     {
-        //check direction
+        //set direction
         if(rb.velocity.x < 0)
         {
             facing = Direction.left;
@@ -185,29 +194,55 @@ public class PlayerManager : MonoBehaviour
             facing = Direction.right;
         }
 
-        //execute dashing
-        if(facing == Direction.right && Input.GetKeyDown(KeyCode.LeftShift) && !dashing)
-        {
-
-            SetGravity();
-
-            rb.gravityScale = 0;
-            rb.velocity = new Vector2(dashSpeed * Time.deltaTime * 10, 0);
-
-            Invoke("SetDash", dashTime);
-
-            
+        //execute right dash
+        if(facing == Direction.right && Input.GetKeyDown(KeyCode.LeftShift) && !dashing && !dashCD)
+        { 
+            Dash(dashSpeed);
         }
-        else if (facing == Direction.left && Input.GetKeyDown(KeyCode.LeftShift))
+        //execute left dash
+        else if (facing == Direction.left && Input.GetKeyDown(KeyCode.LeftShift) && !dashing && !dashCD )
         {
-            Debug.Log("left");
+            Dash(-dashSpeed);
         }
     }
 
+    // execute dashing
+    void Dash(float speed)
+    {
+        ImpactEffect();
+
+        SetGravity();
+
+        rb.velocity = new Vector2(speed * Time.deltaTime * 10, 0);
+
+        Invoke("SetGravity", dashTime);
+
+        dashCD = true;
+    }
+
+    // set gravity to 0 while dashing
     void SetGravity()
     {
         dashing = !dashing;
-        rb.gravityScale = 5;
+
+        if(rb.gravityScale == 5)
+        {
+            rb.gravityScale = 0;
+        }
+        else
+        {
+            rb.gravityScale = 5;
+        }
+    }
+
+    void ImpactEffect()
+    {
+        // show impact effect
+        
+        impact.gameObject.SetActive(true);
+        impact.Stop();
+        impact.Play();
+        
     }
 
     public enum Direction
@@ -217,6 +252,7 @@ public class PlayerManager : MonoBehaviour
         left
     }
 
+    //Show groundcheckbox
     private void OnDrawGizmosSelected()
     {
         Gizmos.DrawCube(groundCheck.position, groundCheckSize);
