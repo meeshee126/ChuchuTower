@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2105855560739916035}
   - component: {fileID: 2105855560739916033}
   - component: {fileID: 2105855560739916032}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Foodsteps
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4767,9 +4767,9 @@ GameObject:
   - component: {fileID: 2105855561382145673}
   - component: {fileID: 2105855561382145686}
   - component: {fileID: 2105855561382145672}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -4907,6 +4907,8 @@ MonoBehaviour:
   lowJumpMultiplier: 4.5
   hangTime: 0.2
   jumpBufferLength: 0.1
+  dashTime: 0
+  dashSpeed: 0
   groundCheckSize: {x: 0.4, y: 0.2}
   groundCheck: {fileID: 2105855561331657055}
   groundLayer:
@@ -4917,6 +4919,7 @@ MonoBehaviour:
     m_Bits: 512
   footsteps: {fileID: 2105855560739916033}
   impact: {fileID: 2105855561994300488}
+  facing: 0
 --- !u!1 &2105855561647905768
 GameObject:
   m_ObjectHideFlags: 0
@@ -4926,7 +4929,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2105855561331657055}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: GroundCheck
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4958,7 +4961,7 @@ GameObject:
   - component: {fileID: 2105855561994300490}
   - component: {fileID: 2105855561994300488}
   - component: {fileID: 2105855561994300491}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: ImpactEffect
   m_TagString: Untagged
   m_Icon: {fileID: 0}

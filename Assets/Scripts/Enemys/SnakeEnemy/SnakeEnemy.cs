@@ -11,67 +11,129 @@ public class SnakeEnemy : EnemyManager
     [SerializeField] float frequency; // Speed of sine movement
     [SerializeField] float magnitude; //  Size of sine movement
     [SerializeField] bool chase;
-    [SerializeField] float straightChaseDistance;
-    [SerializeField] Vector3 snakeMovement;
+    [SerializeField] float dashDistance;
+    [SerializeField] float dashtime;
+    [SerializeField] float dashCD;
+    [SerializeField] LayerMask playerLayer;
 
     Rigidbody2D rb;
 
-    float distance;
+    float time;
+    float expanse;
+    float dashCount;
+    float dashCDCount;
+    bool dashing;
+    bool canDash;
+
+    Vector3 moveToPlayer;
+    Vector3 snakeMovement;
+
+
     Transform curBodyPart;
     Transform frontBodyPart;
 
-    Vector3 moveToPlayer;
-
     private void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
-
-        player = GameObject.Find("Player");
 
         for (int i = 0; i < addSize - 1; i++)
         {
             AddBodyPart();
         }
 
+        expanse = magnitude;
+
+        rb = GetComponent<Rigidbody2D>();
+
+        player = GameObject.Find("Player");
+
+        //avoid starting from 0,0,0, vector
         moveToPlayer = transform.position;
+
         RotateToPlayer();
     }
 
     void AddBodyPart()
     {
-        Transform newPart = (Instantiate(bodyPrefab, bodyParts[bodyParts.Count - 1].position, bodyParts[bodyParts.Count - 1].rotation) as GameObject).transform;
+        Transform newPart = (Instantiate(bodyPrefab, 
+                             bodyParts[bodyParts.Count - 1].position, 
+                             bodyParts[bodyParts.Count - 1].rotation) as GameObject).transform;
 
         newPart.SetParent(transform.parent);
-
         bodyParts.Add(newPart);
     }
 
     void Update()
-    {
-        if(chase)
-        RotateToPlayer();
-
-        Move();         
+    {  
+        MoveHeadPart();
+        MoveBodyPart();
     }
 
-    void Move()
+    void MoveHeadPart()
     {
-        float expanse = magnitude; ;
-
-        moveToPlayer = transform.right * speed * Time.deltaTime;
-
-        //straight chase at a certain distance
-        if (Vector2.Distance(this.transform.position, player.transform.position) < straightChaseDistance)
+        if (chase && !dashing)
         {
-            transform.position += transform.right * speed * Time.deltaTime;
-
+            RotateToPlayer();
         }
 
-        snakeMovement = (transform.up * Mathf.Sin(frequency * Time.time) * magnitude);
+        RaycastHit2D hit = Physics2D.Raycast(this.transform.position, this.transform.right, dashDistance, playerLayer);
 
+        if (hit && !dashing && canDash)    
+        {          
+            dashing = true;
+            RotateToPlayer();
+            Debug.Log("hit");
+        }
+        //dash at a certain distance
+        //if (Vector2.Distance(this.transform.position, player.transform.position) < dashDistance)
 
+        if(dashing)
+        {
+            canDash = false;
 
-        //follow front body part
+            dashCount += Time.deltaTime;
+           
+            time = time >= 1 ? time = 1 : time += 2f * Time.deltaTime;
+            expanse = Mathf.Lerp(magnitude, 0.1f, time);
+
+            //Invoke("DashCD", dashtime);
+
+            if(dashCount > dashtime)
+            {
+                dashing = false;
+            }
+
+            Debug.Log("dashing");
+        }
+        //turn back to snake movement
+        else
+        {
+            dashCount = 0;
+            
+            canDash = true;
+           
+            time = time <= 0.1f ? time = 0.1f : time -= 1f * Time.deltaTime;
+            expanse = Mathf.Lerp(magnitude, 0.1f, time);
+
+            Debug.Log("not dahsing");
+        }
+       
+        moveToPlayer += transform.right * speed * Time.deltaTime;
+        snakeMovement = transform.up * Mathf.Sin(frequency * Time.time) * expanse;
+
+        //move head part
+        transform.position = moveToPlayer + snakeMovement;
+    }
+
+    void DashCD()
+    {
+        dashing = false;
+    }
+
+    void MoveBodyPart()
+    {
+        float distance;
+
+        //follow front body/Head part
         for (int i = 1; i < bodyParts.Count; i++)
         {
             curBodyPart = bodyParts[i];
