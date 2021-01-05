@@ -115,9 +115,6 @@ MonoBehaviour:
   speed: 3
   bodyPrefab: {fileID: 6276601072280238258, guid: 73fb9439fdd31b140a508670779053af,
     type: 3}
-  playerLayer:
-    serializedVersion: 2
-    m_Bits: 1024
   bodyParts:
   - {fileID: 7993177225182375930}
   addSize: 5
