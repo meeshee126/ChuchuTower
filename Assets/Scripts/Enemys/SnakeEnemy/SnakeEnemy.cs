@@ -47,6 +47,7 @@ public class SnakeEnemy : EnemyManager
     }
 
     void Update()
+<<<<<<< HEAD
     {
         if(chase)
         RotateToPlayer();
@@ -67,6 +68,31 @@ public class SnakeEnemy : EnemyManager
         }
 
         snakeMovement = (transform.up * Mathf.Sin(frequency * Time.time) * magnitude);
+=======
+    {
+        if(chase)
+        RotateToPlayer();
+
+        Move();         
+    }
+
+    void Move()
+    {
+        float expanse = magnitude; ;
+
+        moveToPlayer = transform.right * speed * Time.deltaTime;
+
+        //straight chase at a certain distance
+        if (Vector2.Distance(this.transform.position, player.transform.position) < straightChaseDistance)
+        {
+            transform.position += transform.right * speed * Time.deltaTime;
+
+        }
+
+        snakeMovement = (transform.up * Mathf.Sin(frequency * Time.time) * magnitude);
+
+
+>>>>>>> parent of 3dcc2d4... ALMOST DONE Snake movement
 
         //follow front body part
         for (int i = 1; i < bodyParts.Count; i++)
