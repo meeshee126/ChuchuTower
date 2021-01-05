@@ -8,24 +8,19 @@ public class SnakeEnemy : EnemyManager
     [SerializeField] List<Transform> bodyParts = new List<Transform>();
     [SerializeField] int addSize;
     [SerializeField] float minDistance = 0.25f;
+    [Space]
     [SerializeField] float frequency; // Speed of sine movement
     [SerializeField] float magnitude; //  Size of sine movement
     [SerializeField] bool chase;
-    [SerializeField] float straightChaseDistance;
-    [SerializeField] Vector3 snakeMovement;
-
-    Rigidbody2D rb;
 
     float distance;
     Transform curBodyPart;
-    Transform frontBodyPart;
+    Transform prevBodyPart;
 
-    Vector3 moveToPlayer;
+    Vector3 pos;
 
     private void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
-
         player = GameObject.Find("Player");
 
         for (int i = 0; i < addSize - 1; i++)
@@ -33,8 +28,16 @@ public class SnakeEnemy : EnemyManager
             AddBodyPart();
         }
 
-        moveToPlayer = transform.position;
+        pos = transform.position;
         RotateToPlayer();
+    }
+
+    void Update()
+    {
+        if(chase)
+        RotateToPlayer();
+
+        Move();         
     }
 
     void AddBodyPart()
@@ -46,48 +49,31 @@ public class SnakeEnemy : EnemyManager
         bodyParts.Add(newPart);
     }
 
-    void Update()
-    {
-        if(chase)
-        RotateToPlayer();
-
-        Move();         
-    }
-
     void Move()
     {
-        float expanse = magnitude; ;
+        float curSpeed = speed;
 
-        moveToPlayer = transform.right * speed * Time.deltaTime;
+        pos += transform.right * speed * Time.deltaTime;
+        transform.position = pos + (transform.up * Mathf.Sin(frequency * Time.time) * magnitude);
 
-        //straight chase at a certain distance
-        if (Vector2.Distance(this.transform.position, player.transform.position) < straightChaseDistance)
-        {
-            transform.position += transform.right * speed * Time.deltaTime;
-
-        }
-
-        snakeMovement = (transform.up * Mathf.Sin(frequency * Time.time) * magnitude);
-
-
-
-        //follow front body part
         for (int i = 1; i < bodyParts.Count; i++)
         {
             curBodyPart = bodyParts[i];
-            frontBodyPart = bodyParts[i - 1];
+            prevBodyPart = bodyParts[i - 1];
 
-            distance = Vector2.Distance(frontBodyPart.position, curBodyPart.position);
+            distance = Vector2.Distance(prevBodyPart.position, curBodyPart.position);
 
-            //newPos.y = bodyParts[0].position.y;
+            Vector2 newPos = prevBodyPart.position;
 
-            float bodySpeed = Time.deltaTime * distance / minDistance * speed;
+           // newPos.y = bodyParts[0].position.y;
 
-            if (bodySpeed > 0.5f)
-                bodySpeed = 0.5f;
+            float time = Time.deltaTime * distance / minDistance * curSpeed;
 
-            curBodyPart.position = Vector3.Slerp(curBodyPart.position, frontBodyPart.position, bodySpeed);
-            curBodyPart.rotation = Quaternion.Slerp(curBodyPart.rotation, frontBodyPart.rotation, bodySpeed);
+            if (time > 0.5f)
+                time = 0.5f;
+
+            curBodyPart.position = Vector3.Slerp(curBodyPart.position, newPos, time);
+            curBodyPart.rotation = Quaternion.Slerp(curBodyPart.rotation, prevBodyPart.rotation, time);
         }
     }
 

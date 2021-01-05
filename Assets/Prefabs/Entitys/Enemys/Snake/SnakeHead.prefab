@@ -122,4 +122,3 @@ MonoBehaviour:
   frequency: 5
   magnitude: 0.5
   chase: 1
-  straightChaseDistance: 4
