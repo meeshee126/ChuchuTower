@@ -122,13 +122,4 @@ MonoBehaviour:
   frequency: 5
   magnitude: 0.5
   chase: 1
-<<<<<<< HEAD
-<<<<<<< HEAD
-  straightChaseDistance: 2
-  snakeMovement: {x: 0, y: 0, z: 0}
-=======
   straightChaseDistance: 4
->>>>>>> parent of 3dcc2d4... ALMOST DONE Snake movement
-=======
-  straightChaseDistance: 4
->>>>>>> parent of 3dcc2d4... ALMOST DONE Snake movement
