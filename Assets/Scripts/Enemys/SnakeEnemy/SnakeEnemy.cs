@@ -4,30 +4,30 @@ using UnityEngine;
 
 public class SnakeEnemy : EnemyManager
 {
+    [Header("Assigns")]
     [SerializeField] GameObject bodyPrefab;
+    [SerializeField] LayerMask playerLayer;
     [SerializeField] List<Transform> bodyParts = new List<Transform>();
+    [Header("Snake Configuration")]
     [SerializeField] int addSize;
     [SerializeField] float minDistance = 0.25f;
     [SerializeField] float frequency; // Speed of sine movement
     [SerializeField] float magnitude; //  Size of sine movement
-    [SerializeField] bool chase;
-    [SerializeField] float dashDistance;
+    [SerializeField] float dashTriggerDistance;
     [SerializeField] float dashtime;
-    [SerializeField] float dashCD;
-    [SerializeField] LayerMask playerLayer;
+    [Header("Rules")]
+    [SerializeField] bool chase;
 
     Rigidbody2D rb;
 
     float time;
     float expanse;
     float dashCount;
-    float dashCDCount;
     bool dashing;
     bool canDash;
 
     Vector3 moveToPlayer;
     Vector3 snakeMovement;
-
 
     Transform curBodyPart;
     Transform frontBodyPart;
@@ -70,34 +70,42 @@ public class SnakeEnemy : EnemyManager
 
     void MoveHeadPart()
     {
+        //chase when activate in hirarchy
         if (chase && !dashing)
         {
             RotateToPlayer();
         }
 
-        RaycastHit2D hit = Physics2D.Raycast(this.transform.position, this.transform.right, dashDistance, playerLayer);
+        DashCheck();
+       
+        moveToPlayer += transform.right * speed * Time.deltaTime;
+        snakeMovement = transform.up * Mathf.Sin(frequency * Time.time) * expanse;
 
-        if (hit && !dashing && canDash)    
-        {          
+        //move head part
+        transform.position = moveToPlayer + snakeMovement;
+    }
+
+    void DashCheck()
+    {
+        //dash when ray hit player
+        RaycastHit2D hit = Physics2D.Raycast(this.transform.position, this.transform.right, dashTriggerDistance, playerLayer);
+        if (hit && !dashing && canDash)
+        {
             dashing = true;
             RotateToPlayer();
             Debug.Log("hit");
         }
-        //dash at a certain distance
-        //if (Vector2.Distance(this.transform.position, player.transform.position) < dashDistance)
 
-        if(dashing)
+        if (dashing)
         {
             canDash = false;
-
             dashCount += Time.deltaTime;
-           
+
             time = time >= 1 ? time = 1 : time += 2f * Time.deltaTime;
+
             expanse = Mathf.Lerp(magnitude, 0.1f, time);
 
-            //Invoke("DashCD", dashtime);
-
-            if(dashCount > dashtime)
+            if (dashCount > dashtime)
             {
                 dashing = false;
             }
@@ -108,25 +116,14 @@ public class SnakeEnemy : EnemyManager
         else
         {
             dashCount = 0;
-            
+
             canDash = true;
-           
+
             time = time <= 0.1f ? time = 0.1f : time -= 1f * Time.deltaTime;
             expanse = Mathf.Lerp(magnitude, 0.1f, time);
 
-            Debug.Log("not dahsing");
+            Debug.Log("not dashing");
         }
-       
-        moveToPlayer += transform.right * speed * Time.deltaTime;
-        snakeMovement = transform.up * Mathf.Sin(frequency * Time.time) * expanse;
-
-        //move head part
-        transform.position = moveToPlayer + snakeMovement;
-    }
-
-    void DashCD()
-    {
-        dashing = false;
     }
 
     void MoveBodyPart()
@@ -136,6 +133,9 @@ public class SnakeEnemy : EnemyManager
         //follow front body/Head part
         for (int i = 1; i < bodyParts.Count; i++)
         {
+            if (bodyParts[i] == null)
+                bodyParts.RemoveAt(i);
+
             curBodyPart = bodyParts[i];
             frontBodyPart = bodyParts[i - 1];
 

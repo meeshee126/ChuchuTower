@@ -120,8 +120,11 @@ MonoBehaviour:
   addSize: 5
   minDistance: 0.25
   frequency: 5
-  magnitude: 0.5
+  magnitude: 0.7
   chase: 1
-  dashDistance: 3
+  dashTriggerDistance: 2
   dashtime: 1
   dashCD: 0
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 1024
