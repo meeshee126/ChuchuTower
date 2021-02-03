@@ -1,24 +1,45 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
+    [SerializeField] Transform player;
+    [SerializeField] Text uiMetres;
 
-    private Camera mainCamera;
-    public Vector2 widthThresold;
-    public Vector2 heightThresold;
+    public List<GameObject> templates;
 
-    void Awake()
+    int lastMetre;
+    int metres;
+
+    void Start()
     {
-        //Get your mainCamera here. If you are pretty sure that the camera is always the Camera.main you don't need to implement here. Just call for Camera.main later.
+        //set starting metre
+        metres = (int)player.position.y;
+        lastMetre = metres;
     }
 
     void Update()
     {
-        Vector2 screenPosition = mainCamera.WorldToScreenPoint(transform.position);
-        if (screenPosition.x < widthThresold.x || screenPosition.x > widthThresold.y || screenPosition.y < heightThresold.x || screenPosition.y > heightThresold.y)
-            Destroy(GameObject.Find("Player"));
+        CountMetres();
     }
 
+    void CountMetres()
+    {
+        metres = (int)player.position.y;
+
+        //avoid metre subtraction
+        if (metres < lastMetre)
+        {
+            uiMetres.text = lastMetre.ToString();
+        }
+        //count metres
+        else
+        {
+            lastMetre = metres;
+
+            uiMetres.text = metres.ToString();
+        }
+    }
 }

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
 {
-    [SerializeField] float speed, jumpHeight, fallMultiplier, lowJumpMultiplier, hangTime, jumpBufferLength, dashTime, dashSpeed;
+    [SerializeField] float speed, deceleration, jumpHeight, fallMultiplier, lowJumpMultiplier, hangTime, jumpBufferLength, dashTime, dashSpeed;
     [SerializeField] Vector2 groundCheckSize;
     [SerializeField] Transform groundCheck;
     [SerializeField] LayerMask groundLayer, enemyLayer;
@@ -49,13 +49,28 @@ public class PlayerManager : MonoBehaviour
             //check ground colliders and set bool to true
             groundCollider = Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0, groundLayer);
             grounded = groundCollider;
-     
+
+            float CurrentSpeed;
+
             //move horizontal
-            rb.velocity = new Vector2(Input.GetAxisRaw("Horizontal") * speed * Time.deltaTime * 10, rb.velocity.y);
+            if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
+            {
+                CurrentSpeed = speed;
+                rb.velocity = new Vector2(Input.GetAxis("Horizontal") * CurrentSpeed * Time.deltaTime * 10, rb.velocity.y);
+
+            }
+
+            //manage deceleration
+            if (!Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
+            {
+                CurrentSpeed = Mathf.Lerp(rb.velocity.x, 0, deceleration * Time.deltaTime);
+                rb.velocity = new Vector2(CurrentSpeed, rb.velocity.y);
+            }
+            
 
             //reset dash when hit the ground
             if (grounded)
-                dashCD = false;
+            dashCD = false; 
         }
 
         //show footstep effect
@@ -213,6 +228,7 @@ public class PlayerManager : MonoBehaviour
 
         SetGravity();
 
+        //dash
         rb.velocity = new Vector2(speed * Time.deltaTime * 10, 0);
 
         Invoke("SetGravity", dashTime);
