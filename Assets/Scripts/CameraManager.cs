@@ -4,28 +4,31 @@ using UnityEngine;
 
 public class CameraManager : MonoBehaviour
 {
-    [SerializeField] Transform transfPlayer, accBorder;
+    [SerializeField] Transform player, accelerationBorder, cameraDestroyPoint;
     [SerializeField] float speed, startAcceleration, speedMultiplikator =1;
 
     //value for lerping camera
     float tStart;
 
     float currentSpeed;
-
+   
     private void Start()
     {
-        
+       
     }
 
     void Update()
-    {
+    {       
         MoveCamera();
 
         //camera speed up when player get closer to camera top border
-        if(transfPlayer.position.y > accBorder.position.y)
+        if(player != null && player.position.y > accelerationBorder.position.y)
         {
             CameraSpeed();
         }
+
+        if(player != null)
+            DestroyPlayer();
     }
 
     void MoveCamera()
@@ -37,7 +40,8 @@ public class CameraManager : MonoBehaviour
         }
         
         //moving up
-        transform.position += Vector3.up * currentSpeed * Time.deltaTime;
+        if(player != null)
+           transform.position += Vector3.up * currentSpeed * Time.deltaTime;
     }
 
     void LerpStartAccerleration()
@@ -49,7 +53,7 @@ public class CameraManager : MonoBehaviour
     void CameraSpeed()
     {
         //the higher the player, the higher the camera speed
-        float maxAccerlerationSpeed = transfPlayer.position.y - accBorder.position.y;
+        float maxAccerlerationSpeed = player.position.y - accelerationBorder.position.y;
 
         currentSpeed = maxAccerlerationSpeed * speedMultiplikator;
 
@@ -58,5 +62,14 @@ public class CameraManager : MonoBehaviour
         {
             currentSpeed = speed;
         }
+    }
+
+    void DestroyPlayer()
+    {
+        //get top collider boundary position
+        float playerTopBoundaryPosition = player.position.y + (player.gameObject.GetComponent<BoxCollider2D>().bounds.extents.y * 2);
+
+        if (cameraDestroyPoint.position.y > playerTopBoundaryPosition)
+            Destroy(player.gameObject);
     }
 }
