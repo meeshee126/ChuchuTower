@@ -4,16 +4,15 @@ using UnityEngine;
 
 public class CameraManager : MonoBehaviour
 {
-    [SerializeField] float speed, startAcceleration, maxSpeed, speedUpAccerleration, speedDownDeceleration;
+    [SerializeField] Transform transfPlayer, accBorder;
+    [SerializeField] float speed, startAcceleration, speedMultiplikator =1;
 
     //value for lerping camera
-    float tStart, tSpeedUp, tSpeedDown;
+    float tStart;
 
     float currentSpeed;
 
-    bool isSpeedingUp = false;
-
-    void Start()
+    private void Start()
     {
         
     }
@@ -22,14 +21,10 @@ public class CameraManager : MonoBehaviour
     {
         MoveCamera();
 
-        //lerp camera speed wwhen enter trigger
-        if(isSpeedingUp)
+        //camera speed up when player get closer to camera top border
+        if(transfPlayer.position.y > accBorder.position.y)
         {
-            LerpSpeedUp();
-        }
-        else
-        {
-            LerpSpeedDown();
+            CameraSpeed();
         }
     }
 
@@ -51,37 +46,17 @@ public class CameraManager : MonoBehaviour
         currentSpeed = Mathf.Lerp(0, speed, tStart);
     }
 
-    void LerpSpeedUp()
+    void CameraSpeed()
     {
-        tSpeedUp += speedUpAccerleration * Time.deltaTime;
-        currentSpeed = Mathf.Lerp(speed, maxSpeed, tSpeedUp);
-    }
-    
-    void LerpSpeedDown()
-    {
-        tSpeedDown += speedDownDeceleration * Time.deltaTime;
-        currentSpeed = Mathf.Lerp(currentSpeed, speed, tSpeedDown);
-    }
+        //the higher the player, the higher the camera speed
+        float maxAccerlerationSpeed = transfPlayer.position.y - accBorder.position.y;
 
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (collision.gameObject.tag == "Player")
+        currentSpeed = maxAccerlerationSpeed * speedMultiplikator;
+
+        //avoid camera speed lower then std
+        if(currentSpeed < speed)
         {
-            isSpeedingUp = true;
-
-            //reset lerp timer
-            tSpeedUp = 0;
-        }
-    }
-
-    private void OnTriggerExit2D(Collider2D collision)
-    {
-        if(collision.gameObject.tag == "Player")
-        {
-            isSpeedingUp = false;
-
-            //reset lerp timer
-            tSpeedDown = 0;
+            currentSpeed = speed;
         }
     }
 }
