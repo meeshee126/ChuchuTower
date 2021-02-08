@@ -13,6 +13,7 @@ public class ChasingEnemy : EnemyManager
     // Update is called once per frame
     void Update()
     {
-        transform.position = Vector2.MoveTowards(this.transform.position, player.transform.position, speed * Time.deltaTime);
+        if(player != null)
+          transform.position = Vector2.MoveTowards(this.transform.position, player.transform.position, speed * Time.deltaTime);
     }
 }

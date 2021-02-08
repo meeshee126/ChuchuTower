@@ -35,6 +35,8 @@ public class SnakeEnemy : EnemyManager
     private void Start()
     {
 
+        this.transform.parent = GameObject.Find("SnakeStack").transform;
+
         for (int i = 0; i < addSize - 1; i++)
         {
             AddBodyPart();
@@ -49,7 +51,8 @@ public class SnakeEnemy : EnemyManager
         //avoid starting from 0,0,0, vector
         moveToPlayer = transform.position;
 
-        RotateToPlayer();
+        if(player != null)
+            RotateToPlayer();
     }
 
     void AddBodyPart()
@@ -71,7 +74,7 @@ public class SnakeEnemy : EnemyManager
     void MoveHeadPart()
     {
         //chase when activate in hirarchy
-        if (chase && !dashing)
+        if (player != null && chase && !dashing)
         {
             RotateToPlayer();
         }

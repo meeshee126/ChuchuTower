@@ -21,7 +21,9 @@ public class RadiusEnemySpawner : MonoBehaviour
     {
         increase = spaceInRotation;
 
-        RotateToPlayer();
+        if(player != null)
+            RotateToPlayer();
+
         SetRadius();
         StartCoroutine(spawnEntity(spawnInterval, numberOfEntitys));
     }
